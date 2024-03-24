@@ -61,18 +61,15 @@ class AssetRecord:
                 self.remaining_quan[0] -= quan_temp
                 quan_temp = 0
 
-        record = self.SellRecord()
-        record.price = price 
-        record.quan = quan
-        record.proceeds = price * quan
-        record.remaining = self.quan - quan
-        record.basis = 0
         for i in range(len(this_quan)):
-            record.basis += this_quan[i] * this_bases[i]
-        record.gain = record.proceeds - record.basis
-        record.date = date
-
-        self.sell_records.append(record)
+            record = self.SellRecord()
+            record.price = price 
+            record.quan = this_quan[i]
+            record.proceeds = price * this_quan[i]
+            record.basis = this_quan[i] * this_bases[i]
+            record.gain = record.proceeds - record.basis
+            record.date = date
+            self.sell_records.append(record)
 
 class TransAnalysis:
     def __init__(self, filename):
@@ -96,7 +93,7 @@ class TransAnalysis:
                 self.sell_records.loc[len(self.sell_records)] = [record.date, asset.name, record.quan, record.price, record.proceeds, record.basis, record.gain]
 
         self.sell_records = self.sell_records.sort_values(by = ["SettleDate"])
-        self.sell_records = self.sell_records.round(2)
+        self.sell_records = self.sell_records.round(3)
 
     def convert_data(self):
         self.data = self.data.iloc[::-1]
