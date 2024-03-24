@@ -1,7 +1,7 @@
 # Robinhood CSV Processing Program
 ### Han-Mo Ou
 ### March 2024
-This program takes the CSV file Robinhood sends to its users and computes the realized gains of each transaction. Created to help me understand how a non-resident alien (like me) should file taxes in the US. I apologise if any accounting mistakes are present. I don't understand most of the stuff, anyway.   
+This program takes the CSV file Robinhood sends to its users and computes the realised gains of each transaction. Created to help me understand how a non-resident alien (like me) should file taxes in the US. I apologise if any accounting mistakes are present. I don't understand most of the stuff, anyway.   
 
 You are free to modify according to your needs.
 
