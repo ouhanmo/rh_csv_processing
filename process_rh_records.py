@@ -7,6 +7,7 @@ class AssetRecord:
     def __init__(self, name):
         self.name = name
         self.buy_price = []
+        self.buy_date = []
         self.buy_quan = []
         self.sell_price = []
         self.sell_quan = []
@@ -14,12 +15,15 @@ class AssetRecord:
         self.sell_records = []
         self.remaining_quan = []
         self.remaining_basis = []
+        self.remaining_date = []
 
-    def register_buy(self, price, quan):
+    def register_buy(self, price, quan, date):
         self.buy_price.append(price)
         self.buy_quan.append(quan)
+        self.buy_date.append(date)
         self.remaining_basis.append(price)
         self.remaining_quan.append(quan)
+        self.remaining_date.append(date)
         self.quan += quan
     
     def register_sell(self, price, quan, date):
@@ -48,16 +52,20 @@ class AssetRecord:
         quan_temp = quan
         this_quan = []
         this_bases = []
+        this_date = []
         while quan_temp > 0.0000000001 :
             if quan_temp >= self.remaining_quan[0]:
                 this_quan.append(self.remaining_quan[0])
                 this_bases.append(self.remaining_basis[0])
+                this_date.append(self.remaining_date[0])
                 quan_temp -= self.remaining_quan[0]
                 self.remaining_quan.pop(0)
                 self.remaining_basis.pop(0)
+                self.remaining_date.pop(0)
             else:
                 this_quan.append(quan_temp)
                 this_bases.append(self.remaining_basis[0])
+                this_date.append(self.remaining_date[0])
                 self.remaining_quan[0] -= quan_temp
                 quan_temp = 0
 
@@ -68,7 +76,8 @@ class AssetRecord:
             record.proceeds = price * this_quan[i]
             record.basis = this_quan[i] * this_bases[i]
             record.gain = record.proceeds - record.basis
-            record.date = date
+            record.selldate = date
+            record.buydate = this_date[i]
             self.sell_records.append(record)
 
 class TransAnalysis:
@@ -87,12 +96,12 @@ class TransAnalysis:
         for key, record in self.assets.items():
             self.curr_assets.loc[len(self.curr_assets)] = [key, record.quan]
 
-        self.sell_records = pd.DataFrame({"SettleDate" : [], "Instument": [], "Quantity": [], "Price": [], "Proceeds": [], "Basis": [], "GainLoss": []})
+        self.sell_records = pd.DataFrame({"BuyDate":[], "SellDate" : [], "Instument": [], "Quantity": [], "Price": [], "Proceeds": [], "Basis": [], "GainLoss": []})
         for _, asset in self.assets.items():
             for record in asset.sell_records:
-                self.sell_records.loc[len(self.sell_records)] = [record.date, asset.name, record.quan, record.price, record.proceeds, record.basis, record.gain]
+                self.sell_records.loc[len(self.sell_records)] = [record.buydate, record.selldate, asset.name, record.quan, record.price, record.proceeds, record.basis, record.gain]
 
-        self.sell_records = self.sell_records.sort_values(by = ["SettleDate"])
+        self.sell_records = self.sell_records.sort_values(by = ["SellDate", "BuyDate"])
         self.sell_records = self.sell_records.round(3)
 
     def convert_data(self):
@@ -138,7 +147,7 @@ class TransAnalysis:
                 self.assets[name] = AssetRecord(name)
             # register transaction
             if self.data_buysell["TransCode"].iloc[index] in ['Buy', 'REC']:
-                self.assets[name].register_buy(price, quan)
+                self.assets[name].register_buy(price, quan, date)
             elif self.data_buysell["TransCode"].iloc[index] == 'Sell':
                 self.assets[name].register_sell(price, quan, date)
             elif self.data_buysell["TransCode"].iloc[index] == 'SPL':
@@ -169,7 +178,7 @@ class TransAnalysis:
 
     def print_sell(self, write = False, filename = "", year = None):
         if year:
-            data = self.sell_records[ (self.sell_records["SettleDate"] >= "%d-1-1" % year) &  (self.sell_records["SettleDate"] <= "%d-12-31" % year) ]
+            data = self.sell_records[ (self.sell_records["SellDate"] >= "%d-1-1" % year) &  (self.sell_records["SellDate"] <= "%d-12-31" % year) ]
         else: 
             data = self.sell_records
         print(data)
